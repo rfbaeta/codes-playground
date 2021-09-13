@@ -4,7 +4,7 @@ import os
 import glob
 
 #https://medium.com/vacatronics/3-ways-to-calibrate-your-camera-using-opencv-and-python-395528a51615
-data = "./data/camera_calibration2"
+data = "./data/camera_calibration_syt"
 
 def calibrate_chessboard(dir_path, image_format, square_size, width, height):
     cont = 0
@@ -31,8 +31,7 @@ def calibrate_chessboard(dir_path, image_format, square_size, width, height):
         cv2.imwrite(f"./data/camera_calibration/gray_{cont}.jpg", gray)
         cont+=1
         # Find the chess board corners
-        ret, corners = cv2.findChessboardCorners(gray, (7, 6),  flags=cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_NORMALIZE_IMAGE
-        + cv2.CALIB_CB_FAST_CHECK)
+        ret, corners = cv2.findChessboardCorners(gray, (9, 6),  None)
         print(ret)
         print(corners)
         # If found, add object points, image points (after refining them)
@@ -49,4 +48,4 @@ def calibrate_chessboard(dir_path, image_format, square_size, width, height):
     return []
     #return [ret, mtx, dist, rvecs, tvecs]
 
-parameters = calibrate_chessboard(data, "jpg", 2.5, 6, 6)
+parameters = calibrate_chessboard(data, "jpg", 4, 9, 6)
