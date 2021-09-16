@@ -5,6 +5,27 @@ import glob
 
 #https://medium.com/vacatronics/3-ways-to-calibrate-your-camera-using-opencv-and-python-395528a51615
 data = "./data/camera_calibration_syt"
+def save_coefficients(mtx, dist, path):
+    '''Save the camera matrix and the distortion coefficients to given path/file.'''
+    cv_file = cv2.FileStorage(path, cv2.FILE_STORAGE_WRITE)
+    cv_file.write('K', mtx)
+    cv_file.write('D', dist)
+    # note you *release* you don't close() a FileStorage object
+    cv_file.release()
+
+def load_coefficients(path):
+    '''Loads camera matrix and distortion coefficients.'''
+    # FILE_STORAGE_READ
+    cv_file = cv2.FileStorage(path, cv2.FILE_STORAGE_READ)
+
+    # note we also have to specify the type to retrieve other wise we only get a
+    # FileNode object back instead of a matrix
+    camera_matrix = cv_file.getNode('K').mat()
+    dist_matrix = cv_file.getNode('D').mat()
+
+    cv_file.release()
+    return [camera_matrix, dist_matrix]
+
 
 def calibrate_chessboard(dir_path, image_format, square_size, width, height):
     cont = 0
@@ -31,21 +52,19 @@ def calibrate_chessboard(dir_path, image_format, square_size, width, height):
         cv2.imwrite(f"./data/camera_calibration/gray_{cont}.jpg", gray)
         cont+=1
         # Find the chess board corners
-        ret, corners = cv2.findChessboardCorners(gray, (9, 6),  None)
-        print(ret)
-        print(corners)
+        ret, corners = cv2.findChessboardCorners(gray, (11, 7),  criteria)
         # If found, add object points, image points (after refining them)
         if ret:
-            fnl = cv2.drawChessboardCorners(img, (7, 7), corners, ret)
+            fnl = cv2.drawChessboardCorners(img, (11, 7), corners, ret)
             cv2.imwrite(f"./data/camera_calibration/corners_{cont}.jpg", fnl)
-            #objpoints.append(objp)
+            objpoints.append(objp)
 
-        #    corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
-         #   imgpoints.append(corners2)
+            corners2 = cv2.cornerSubPix(gray, corners, (11, 7), (-1, -1), criteria)
+            imgpoints.append(corners2)
 
     # Calibrate camera
-    #ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
-    return []
-    #return [ret, mtx, dist, rvecs, tvecs]
+    ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+    return [ret, mtx, dist, rvecs, tvecs]
 
-parameters = calibrate_chessboard(data, "jpg", 4, 9, 6)
+parameters = calibrate_chessboard(data, "jpg", 4, 11, 7)
+save_coefficients(parameters[1], parameters[2], "calibration_chessboard.yml")
